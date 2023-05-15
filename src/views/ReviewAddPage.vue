@@ -16,7 +16,7 @@
             alt="Your Company"
           />
           <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Please Submit Your Review
+            Please Submit Your Review - {{ clientName }}
           </h2>
         </div>
 
@@ -71,7 +71,15 @@
 
 <script>
 import Card from '../components/Cardlist.vue'
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  where,
+  query,
+  orderBy
+} from 'firebase/firestore'
 import { db } from '../utils/fireabse'
 export default {
   components: {
@@ -81,6 +89,7 @@ export default {
     return {
       name: '',
       review: '',
+      clientName: import.meta.env.VITE_NAME,
       cardData: []
     }
   },
@@ -89,6 +98,7 @@ export default {
       return {
         name: this.name,
         review: this.review,
+        show: true,
         timeStamp: serverTimestamp()
       }
     },
@@ -97,7 +107,11 @@ export default {
       this.review = ''
     },
     async getReviews() {
-      const q = query(collection(db, 'review'), orderBy('timeStamp', 'desc'))
+      const q = query(
+        collection(db, 'review'),
+        orderBy('timeStamp', 'desc'),
+        where('show', '==', true)
+      )
       const result = await getDocs(q)
       this.cardData = result.docs.map((doc) => {
         const { name, review } = doc.data()
@@ -110,7 +124,6 @@ export default {
         const docRef = await addDoc(collection(db, 'review'), paylaod)
         this.resetFormData()
         this.getReviews()
-        console.log('Document written with ID: ', docRef.id)
       } catch (e) {
         console.error('Error adding document: ', e)
       }
